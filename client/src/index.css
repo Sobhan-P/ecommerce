@@ -1,0 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Jua&family=Outfit:wght@100..900&display=swap");
+@import "tailwindcss";
+
+* {
+  font-family: "Outfit", sans-serif;
+}
+
+@theme {
+  --color-primary: #0081a7;
+  --color-darks: #172a3a;
+  --color-secondary: #d5f1f4;
+  --color-hover-color: #0098b0;
+  --font-logo: "Jua", sans-serif;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
