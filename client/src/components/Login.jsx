@@ -1,19 +1,33 @@
 import { useState } from "react";
 import { useAppContext } from "../context/AppContext";
+import toast from "react-hot-toast";
 const Login = () => {
   const [state, setState] = useState("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { setShowUserLogin, setUser } = useAppContext();
+  const { setShowUserLogin, setUser, axios, navigate } = useAppContext();
 
-  const onSubmitHandler = (e) => {
-    e.preventDefault();
-    setUser({
-      email: "",
-      password: "",
-    });
-    setShowUserLogin(false);
+  const onSubmitHandler = async (e) => {
+    try {
+      e.preventDefault();
+
+      const { data } = await axios.post(`/api/user/${state}`, {
+        name,
+        email,
+        password,
+      });
+
+      if (data.success) {
+        navigate("/");
+        setUser(data.success);
+        setShowUserLogin(false);
+      } else {
+        toast.error(data.msg);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   return (
@@ -27,7 +41,7 @@ const Login = () => {
         className="flex flex-col gap-4 m-auto items-start p-8 py-12 w-80 sm:w-[352px] bg-[#eaf8fa] text-gray-500 rounded-lg shadow-xl border border-gray-200 "
       >
         <p className="text-2xl font-medium m-auto text-primary">
-          <span>User</span> {state === "login" ? "Login" : "Sign Up"}
+          <span>{state === "login" ? "Login" : "Sign Up"}</span>
         </p>
         {state === "register" && (
           <div className="w-full">

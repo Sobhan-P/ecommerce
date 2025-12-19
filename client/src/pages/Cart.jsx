@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import { useEffect, useState } from "react";
 import { useAppContext } from "../context/AppContext";
-import { dummyAddress } from "../assets/assets";
+import toast from "react-hot-toast";
 
 const Cart = () => {
   const {
@@ -13,12 +13,15 @@ const Cart = () => {
     navigate,
     getCartAmount,
     removeWholeItemFromCart,
+    axios,
+    user,
+    setCartItems,
   } = useAppContext();
 
   const [cartArray, setCartArray] = useState([]);
-  const [addressess, setAddresses] = useState(dummyAddress);
+  const [addressess, setAddresses] = useState([]);
   const [showAddress, setShowAddress] = useState(false);
-  const [selectedAddress, setSelectedAddress] = useState(dummyAddress[0]);
+  const [selectedAddress, setSelectedAddress] = useState(null);
   const [paymentOption, setPaymentOption] = useState("COD");
 
   const getCart = () => {
@@ -33,7 +36,70 @@ const Cart = () => {
     setCartArray(tempArray);
   };
 
-  const placeOrder = () => {};
+  const getUserAddress = async () => {
+    try {
+      const { data } = await axios.get("/api/address/get");
+
+      if (data.success) {
+        setAddresses(data.addressess);
+        if (data.addressess.length > 0) {
+          setSelectedAddress(data.addressess[0]);
+        }
+      } else {
+        toast.error(data.msg);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      getUserAddress();
+    }
+  }, [user]);
+
+  const placeOrder = async () => {
+    try {
+      if (!selectedAddress) {
+        return toast.error("Please select the address");
+      }
+      if (paymentOption === "COD") {
+        const { data } = await axios.post("api/order/cod", {
+          userId: user._id,
+          items: cartArray.map((item) => ({
+            product: item._id,
+            quantity: item.quantity,
+          })),
+          address: selectedAddress._id,
+        });
+        if (data.success) {
+          toast.success(data.msg);
+          setCartItems({});
+          navigate("/my-orders");
+        } else {
+          toast.error(data.msg);
+        }
+      } else {
+        const { data } = await axios.post("api/order/stripe", {
+          userId: user._id,
+          items: cartArray.map((item) => ({
+            product: item._id,
+            quantity: item.quantity,
+          })),
+          address: selectedAddress._id,
+        });
+        if (data.success) {
+          window.location.replace(data.url);
+        } else {
+          toast.error(data.msg);
+        }
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   useEffect(() => {
     if (products.length > 0 && cartItems) {
       getCart();

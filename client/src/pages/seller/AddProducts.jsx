@@ -1,20 +1,70 @@
 import { useState } from "react";
 import { assets, categories } from "../../assets/assets.js";
+import { useAppContext } from "../../context/AppContext.jsx";
+import toast from "react-hot-toast";
+import { ThreeDots } from "react-loading-icons";
 
 const AddProducts = () => {
   const [files, setFiles] = useState([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState([]);
   const [price, setPrice] = useState("");
   const [offerPrice, setOfferPrice] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { axios } = useAppContext();
 
   const onSubmitHandler = async (e) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
+      setIsLoading(true);
+      const productData = {
+        name,
+        description: description.split("\n"),
+        category,
+        price,
+        offerPrice,
+      };
+
+      const formData = new FormData();
+      formData.append("productData", JSON.stringify(productData));
+
+      for (let i = 0; i < files.length; i++) {
+        formData.append("images", files[i]);
+      }
+
+      const { data } = await axios.post("/api/products/add", formData);
+
+      if (data.success) {
+        toast.success(data.msg);
+        setName("");
+        setDescription("");
+        setCategory("");
+        setPrice("");
+        setOfferPrice("");
+        setFiles([]);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
-    <div className="no-scrollbar flex-1 h-[95vh] overflow-y-scroll flex flex-col justify-between">
+    <div
+      className={`${
+        isLoading
+          ? "relative no-scrollbar flex-1 overflow-y-scroll flex flex-col justify-between"
+          : "relative no-scrollbar h-[95vh] flex-1 overflow-y-scroll flex flex-col justify-between"
+      }`}
+    >
+      {isLoading && (
+        <div className=" absolute top-0 left-0 right-0 bottom-0 bg-primary/5 flex items-center justify-center">
+          <ThreeDots fill="#0081a7" />
+        </div>
+      )}
       <form
         onSubmit={onSubmitHandler}
         className="md:p-10 p-4 space-y-5 max-w-lg"
@@ -35,7 +85,6 @@ const AddProducts = () => {
                       const updatedFiles = [...files];
                       updatedFiles[index] = e.target.files[0];
                       setFiles(updatedFiles);
-                      console.log("files", updatedFiles[index]);
                     }}
                   />
                   <img

@@ -1,8 +1,9 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
+import toast from "react-hot-toast";
 
 const SellerLayout = () => {
-  const { isSeller, setIsSeller } = useAppContext();
+  const { axios, navigate } = useAppContext();
   const dashboardicon = (
     <svg
       className="w-6 h-6"
@@ -68,7 +69,17 @@ const SellerLayout = () => {
   ];
 
   const logout = async () => {
-    setIsSeller(false);
+    try {
+      const { data } = await axios.get("/api/seller/logout");
+      if (data.success) {
+        toast.success(data.msg);
+        navigate("/");
+      } else {
+        toast.error(data.msg);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   return (
