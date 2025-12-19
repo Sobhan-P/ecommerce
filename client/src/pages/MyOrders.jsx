@@ -8,7 +8,6 @@ const MyOrders = () => {
   const fetchMyOrders = async () => {
     try {
       const { data } = await axios.get("/api/order/user");
-      console.log("data", data);
 
       if (data.success) {
         setMyOrders(data.orders);
@@ -28,13 +27,13 @@ const MyOrders = () => {
         <p className="text-2xl font-medium uppercase">My Orders</p>
         <div className="w-16 h-0.5 bg-primary rounded-full"></div>
       </div>
-      {myOrders?.map((order, index) => (
+      {myOrders.map((order, index) => (
         <div
           key={index}
           className="border border-gray-300 rounded-lg mb-10 p-4 py-5 max-w-4xl"
         >
           <p className="flex justify-between md:items-center text-gray-400 md:font-medium max-md:flex-col">
-            <span>Prder ID:&nbsp; {order._id}</span>
+            <span>Order ID:&nbsp; {order._id}</span>
             <span>Payment Type:&nbsp; {order.paymentType}</span>
             <span>
               Total Amount:&nbsp;{currency}

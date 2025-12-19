@@ -42,6 +42,8 @@ export const placeOrderCOD = async (req, res) => {
 export const placeOrderStripe = async (req, res) => {
   try {
     const { userId, items, address } = req.body;
+    console.log("userId", userId, items, address);
+
     const { origin } = req.headers;
     if (!address || !items) {
       return res.json({
@@ -73,8 +75,6 @@ export const placeOrderStripe = async (req, res) => {
     const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
 
     const line_items = productData.map((item) => {
-      console.log("item price", item.quantity);
-
       return {
         price_data: {
           currency: "INR",
@@ -110,20 +110,22 @@ export const placeOrderStripe = async (req, res) => {
   }
 };
 
-export const stripeWebHooks = async (req, res) => {
+export const stripeWebHooks = async (request, response) => {
+  console.log("request", request);
+
   const stripeInstance = new stripe(process.env.STRIPE_SECRET_KEY);
 
-  const sig = req.headers["stripe-signature"];
+  const sig = request.headers["stripe-signature"];
   let event;
 
   try {
     event = stripeInstance.webhooks.constructEvent(
-      req.body,
+      request.body,
       sig,
       process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (error) {
-    res.status(400).send(`Eebhook Error ${error.message}`);
+    response.status(400).send(`Webhook Error ${error.message}`);
   }
 
   switch (event.type) {
@@ -139,6 +141,7 @@ export const stripeWebHooks = async (req, res) => {
 
       await Order.findByIdAndUpdate(orderId, { isPaid: true });
       await User.findByIdAndUpdate(userId, { cartItems: {} });
+
       break;
     }
     case "payment_intent.payment_failed": {
@@ -157,7 +160,7 @@ export const stripeWebHooks = async (req, res) => {
       console.error(`Unhandled event type ${event.type}`);
       break;
   }
-  res.json({
+  response.json({
     received: true,
   });
 };
